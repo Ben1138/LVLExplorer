@@ -2,3 +2,7 @@
 	path = LibSWBF2
 	url = https://github.com/Ben1138/LibSWBF2
 	branch = master
+[submodule "ThirdParty/LibSWBF2"]
+	path = ThirdParty/LibSWBF2
+	url = https://github.com/Ben1138/LibSWBF2
+	branch = feature/LVLSupport
