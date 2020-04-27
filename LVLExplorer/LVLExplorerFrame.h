@@ -6,6 +6,7 @@
 #include "LibSWBF2.h"
 
 using LibSWBF2::Chunks::LVL::LVL;
+using LibSWBF2::Chunks::GenericChunk;
 
 class LVLExplorerFrame : public wxFrame
 {
@@ -42,7 +43,7 @@ private:
 	void DisplayText();
 	void DisplayImage();
 	void HideCurrentDisplay();
-	void ParseLVL();
+	void ParseChunk(const GenericChunk& chunk, wxTreeItemId parent);
 
 	void OnMenuOpenFile(wxCommandEvent& event);
 	void OnMenuExit(wxCommandEvent& event);
