@@ -138,6 +138,7 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 		return;
 
 
+	m_lvlTreeCtrl->DeleteAllItems();
 	if (m_currentLVL != nullptr)
 	{
 		LVL::Destroy(m_currentLVL);
@@ -145,20 +146,23 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 	}
 
 	m_currentLVL = LVL::Create();
-	if (m_currentLVL->ReadFromFile(dialog.GetPath().c_str().AsChar()))
+	if (!m_currentLVL->ReadFromFile(dialog.GetPath().c_str().AsChar()))
 	{
 		wxMessageBox(
-			wxString::Format("Opening file '%s' failed!", dialog.GetPath()),
-			"Cannot open file",
+			wxString::Format("Errors occoured while opening file '%s'!", dialog.GetPath()),
+			"Error",
 			wxICON_ERROR);
 
-		LVL::Destroy(m_currentLVL);
-		m_currentLVL = nullptr;
-		return;
+		//LVL::Destroy(m_currentLVL);
+		//m_currentLVL = nullptr;
+		//return;
 	}
 
 	m_treeRoot = m_lvlTreeCtrl->AddRoot(dialog.GetFilename().c_str().AsChar());
-	ParseLVL();
+	if (m_currentLVL != nullptr)
+	{
+		ParseChunk(*m_currentLVL, m_treeRoot);
+	}
 }
 
 void LVLExplorerFrame::OnMenuExit(wxCommandEvent& event)
@@ -166,16 +170,19 @@ void LVLExplorerFrame::OnMenuExit(wxCommandEvent& event)
 	Close();
 }
 
-void LVLExplorerFrame::ParseLVL()
+void LVLExplorerFrame::ParseChunk(const GenericChunk& chunk, wxTreeItemId parent)
 {
-	if (m_currentLVL == nullptr)
-	{
-		wxLogError("Called ParseLVL() with m_currentLVL being NULL!");
-		return;
-	}
+	static int count = 0;
+	if (count > 1000) return;
+	count++;
 
-	//TODO
-	m_lvlTreeCtrl->AppendItem(m_treeRoot, "DummyItem");
+	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk.GetHeaderName().c_str());
+
+	const std::vector<GenericChunk>& children = chunk.GetChildren();
+	for (const GenericChunk& child : children)
+	{
+		ParseChunk(child, current);
+	}
 }
 
 void LVLExplorerFrame::AddLogLine(wxString msg)
