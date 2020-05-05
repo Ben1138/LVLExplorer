@@ -6,3 +6,7 @@
 	path = ThirdParty/LibSWBF2
 	url = https://github.com/Ben1138/LibSWBF2
 	branch = feature/LVLSupport
+[submodule "ThirdParty/wxWidgets"]
+	path = ThirdParty/wxWidgets
+	url = https://github.com/wxWidgets/wxWidgets
+	branch = master
