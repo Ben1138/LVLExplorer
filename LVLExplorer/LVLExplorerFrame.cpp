@@ -5,10 +5,12 @@
 
 #define ID_MENU_FILE_OPEN 1138
 #define ID_MENU_EXIT 1139
+#define ID_TREE_VIEW 1140
 
 wxBEGIN_EVENT_TABLE(LVLExplorerFrame, wxFrame)
 	EVT_MENU(ID_MENU_FILE_OPEN, OnMenuOpenFile)
 	EVT_MENU(ID_MENU_EXIT, OnMenuExit)
+	EVT_TREE_SEL_CHANGED(ID_TREE_VIEW, OnTreeSelectionChanges)
 wxEND_EVENT_TABLE()
 
 LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
@@ -16,7 +18,7 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 	wxID_ANY,
 	"LVLExplorer", 
 	wxDefaultPosition, 
-	wxSize(600, 400))
+	wxSize(800, 600))
 {
 	this->CenterOnScreen();
 	SetMinSize(wxSize(600, 400));
@@ -32,7 +34,7 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 
 	m_lvlTreeCtrl = new wxTreeCtrl(
 		m_panelMain,
-		wxID_ANY,
+		ID_TREE_VIEW,
 		wxDefaultPosition,
 		wxSize(200, 400)
 	);
@@ -51,10 +53,27 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 	m_imageData = nullptr;
 	m_currentLVL = nullptr;
 
-	m_sizer = new wxBoxSizer(wxHORIZONTAL);
-	m_sizer->Add(m_lvlTreeCtrl, wxSizerFlags().Expand().Proportion(1).Border(wxALL, 10));
-	m_panelMain->SetSizer(m_sizer);
-	
+	m_infoText = new wxStaticText(
+		m_panelMain,
+		wxID_ANY,
+		"Chunk Position:\n"
+		"Chunk Data Size:\n"
+		"Chunk Full Size:",
+		wxDefaultPosition,
+		wxDefaultSize
+	);
+	m_infoText->SetMinSize(wxSize(400, 50));
+	m_infoText->SetMaxSize(wxSize(400, 50));
+
+	m_sizer1 = new wxBoxSizer(wxHORIZONTAL);
+	m_sizer1->Add(m_lvlTreeCtrl, wxSizerFlags().Expand().Proportion(1).Border(wxALL, 10));
+	m_panelMain->SetSizer(m_sizer1);
+	m_panelMain->SetAutoLayout(true);
+
+	m_sizer2 = new wxBoxSizer(wxVERTICAL);
+	m_sizer2->Add(m_infoText, wxSizerFlags().Proportion(1).Border(wxTOP, 10));
+	m_sizer1->Add(m_sizer2, wxSizerFlags().Expand().Proportion(2));
+
 	m_rightHandSideFlags = wxSizerFlags().Expand().Proportion(2).Border(wxTOP | wxRIGHT | wxBOTTOM, 10);
 	m_displayStatus = EDisplayStatus::NONE;
 	DisplayText();
@@ -75,8 +94,8 @@ void LVLExplorerFrame::DisplayText()
 		HideCurrentDisplay();
 
 	m_textDisplay->Show();
-	m_sizer->Add(m_textDisplay, m_rightHandSideFlags);
-	m_sizer->Layout();
+	m_sizer2->Add(m_textDisplay, m_rightHandSideFlags);
+	m_sizer2->Layout();
 	m_panelMain->Layout();
 	m_displayStatus = EDisplayStatus::TEXT;
 }
@@ -103,8 +122,8 @@ void LVLExplorerFrame::DisplayImage()
 
 	m_imageDisplay->SetImageData(width, height, m_imageData);
 	m_imageDisplay->Show();
-	m_sizer->Add(m_imageDisplay, m_rightHandSideFlags);
-	m_sizer->Layout();
+	m_sizer2->Add(m_imageDisplay, m_rightHandSideFlags);
+	m_sizer2->Layout();
 	m_panelMain->Layout();
 	m_displayStatus = EDisplayStatus::IMAGE;
 }
@@ -116,11 +135,11 @@ void LVLExplorerFrame::HideCurrentDisplay()
 		case EDisplayStatus::NONE:
 			return;
 		case EDisplayStatus::TEXT:
-			m_sizer->Remove(1);
+			m_sizer2->Remove(1);
 			m_textDisplay->Hide();
 			break;
 		case EDisplayStatus::IMAGE:
-			m_sizer->Remove(1);
+			m_sizer2->Remove(1);
 			m_imageDisplay->Hide();
 			break;
 		default:
@@ -137,8 +156,9 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 	if (dialog.ShowModal() == wxID_CANCEL)
 		return;
 
-
 	m_lvlTreeCtrl->DeleteAllItems();
+	m_treeToChunk.clear();
+
 	if (m_currentLVL != nullptr)
 	{
 		LVL::Destroy(m_currentLVL);
@@ -170,6 +190,37 @@ void LVLExplorerFrame::OnMenuExit(wxCommandEvent& event)
 	Close();
 }
 
+void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
+{
+	wxTreeItemId item = event.GetItem();
+	if (item == m_treeRoot)
+	{
+		m_infoText->SetLabel(
+			"Chunk Position:\n"
+			"Chunk Data Size:\n"
+			"Chunk Full Size:"
+		);
+		return;
+	}
+
+	auto it = m_treeToChunk.find(item);
+	if (it == m_treeToChunk.end())
+	{
+		wxLogError("Could not find corresponding chunk for tree item ID %i!", item.GetID());
+		return;
+	}
+
+	const GenericChunk* chunk = it->second;
+	m_infoText->SetLabel(wxString::Format(
+		"Chunk Position:\t%i\n"
+		"Chunk Data Size:\t%i\n"
+		"Chunk Full Size:\t%i",
+		(uint32_t)chunk->GetPosition(),
+		(uint32_t)chunk->GetDataSize(),
+		(uint32_t)chunk->GetFullSize()
+	));
+}
+
 void LVLExplorerFrame::ParseChunk(const GenericChunk& chunk, wxTreeItemId parent)
 {
 	static int count = 0;
@@ -177,11 +228,12 @@ void LVLExplorerFrame::ParseChunk(const GenericChunk& chunk, wxTreeItemId parent
 	count++;
 
 	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk.GetHeaderName().c_str());
+	m_treeToChunk.emplace(current, &chunk);
 
-	const std::vector<GenericChunk>& children = chunk.GetChildren();
-	for (const GenericChunk& child : children)
+	const List<GenericChunk>& children = chunk.GetChildren();
+	for (size_t i = 0; i < children.Size(); ++i)
 	{
-		ParseChunk(child, current);
+		ParseChunk(children[i], current);
 	}
 }
 
