@@ -18,7 +18,7 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 	wxID_ANY,
 	"LVLExplorer", 
 	wxDefaultPosition, 
-	wxSize(800, 600))
+	wxSize(1024, 768))
 {
 	this->CenterOnScreen();
 	SetMinSize(wxSize(600, 400));
@@ -90,7 +90,10 @@ LVLExplorerFrame::~LVLExplorerFrame()
 
 void LVLExplorerFrame::DisplayText()
 {
-	if (m_displayStatus != EDisplayStatus::TEXT)
+	if (m_displayStatus == EDisplayStatus::TEXT)
+		return;
+
+	if (m_displayStatus != EDisplayStatus::NONE)
 		HideCurrentDisplay();
 
 	m_textDisplay->Show();
@@ -102,15 +105,17 @@ void LVLExplorerFrame::DisplayText()
 
 void LVLExplorerFrame::DisplayImage()
 {
-	if (m_displayStatus != EDisplayStatus::IMAGE)
+	if (m_displayStatus == EDisplayStatus::IMAGE)
+		return;
+
+	if (m_displayStatus != EDisplayStatus::NONE)
 		HideCurrentDisplay();
 
-	static size_t width, height;
 	if (m_imageData == nullptr)
 	{
-		width = 512;
-		height = 512;
-		size_t size = width * height * 3;
+		m_imageWidth = 256;
+		m_imageHeight = 256;
+		size_t size = m_imageWidth * m_imageHeight * 3;
 		m_imageData = (unsigned char*)malloc(size);
 
 		for (int i = 0; i < size; ++i)
@@ -120,7 +125,7 @@ void LVLExplorerFrame::DisplayImage()
 		}
 	}
 
-	m_imageDisplay->SetImageData(width, height, m_imageData);
+	m_imageDisplay->SetImageData(m_imageWidth, m_imageHeight, m_imageData);
 	m_imageDisplay->Show();
 	m_sizer2->Add(m_imageDisplay, m_rightHandSideFlags);
 	m_sizer2->Layout();
@@ -181,7 +186,7 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 	m_treeRoot = m_lvlTreeCtrl->AddRoot(dialog.GetFilename().c_str().AsChar());
 	if (m_currentLVL != nullptr)
 	{
-		ParseChunk(*m_currentLVL, m_treeRoot);
+		ParseChunk(m_currentLVL, m_treeRoot);
 	}
 }
 
@@ -210,7 +215,7 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 		return;
 	}
 
-	const GenericChunk* chunk = it->second;
+	GenericChunk* chunk = it->second;
 	m_infoText->SetLabel(wxString::Format(
 		"Chunk Position:\t%i\n"
 		"Chunk Data Size:\t%i\n"
@@ -219,18 +224,50 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 		(uint32_t)chunk->GetDataSize(),
 		(uint32_t)chunk->GetFullSize()
 	));
+
+	BODY* textureBodyChunk = dynamic_cast<BODY*>(chunk);
+	if (textureBodyChunk != nullptr)
+	{
+		uint8_t* data;
+
+		// this delivers R8 G8 B8 A8
+		textureBodyChunk->GetImageData(m_imageWidth, m_imageHeight, data);
+
+		size_t numPixels = m_imageWidth * m_imageHeight;
+		if (m_imageData != nullptr)
+		{
+			delete[] m_imageData;
+		}
+
+		m_imageData = new unsigned char[numPixels * 3];
+		for (size_t i = 0; i < numPixels; ++i)
+		{
+			//let's get rid of the alpha channel
+			m_imageData[(i * 3) + 0] = data[(i * 4) + 0];
+			m_imageData[(i * 3) + 1] = data[(i * 4) + 1];
+			m_imageData[(i * 3) + 2] = data[(i * 4) + 2];
+		}
+
+		DisplayImage();
+	}
+	else
+	{
+		m_textDisplay->Clear();
+		m_textDisplay->WriteText(chunk->ToString().Buffer());
+		DisplayText();
+	}
 }
 
-void LVLExplorerFrame::ParseChunk(const GenericChunk& chunk, wxTreeItemId parent)
+void LVLExplorerFrame::ParseChunk(GenericChunk* chunk, wxTreeItemId parent)
 {
 	static int count = 0;
 	if (count > 1000) return;
 	count++;
 
-	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk.GetHeaderName().c_str());
-	m_treeToChunk.emplace(current, &chunk);
+	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk->GetHeaderName().c_str());
+	m_treeToChunk.emplace(current, chunk);
 
-	const List<GenericChunk>& children = chunk.GetChildren();
+	const List<GenericChunk*>& children = chunk->GetChildren();
 	for (size_t i = 0; i < children.Size(); ++i)
 	{
 		ParseChunk(children[i], current);

@@ -8,6 +8,7 @@
 
 using std::map;
 using LibSWBF2::Chunks::LVL::LVL;
+using LibSWBF2::Chunks::LVL::BODY;
 using LibSWBF2::Chunks::GenericChunk;
 using LibSWBF2::Types::List;
 
@@ -41,15 +42,18 @@ private:
 	EDisplayStatus m_displayStatus;
 
 	LVL* m_currentLVL;
-	map<wxTreeItemId, const GenericChunk*> m_treeToChunk;
-	unsigned char* m_imageData;
+	map<wxTreeItemId, GenericChunk*> m_treeToChunk;
+
+	uint16_t m_imageWidth;
+	uint16_t m_imageHeight;
+	unsigned char* m_imageData = nullptr;
 
 
 private:
 	void DisplayText();
 	void DisplayImage();
 	void HideCurrentDisplay();
-	void ParseChunk(const GenericChunk& chunk, wxTreeItemId parent);
+	void ParseChunk(GenericChunk* chunk, wxTreeItemId parent);
 
 	// events
 	void OnMenuOpenFile(wxCommandEvent& event);
