@@ -2,6 +2,7 @@
 #include <wx/msgdlg.h>
 #include <wx/wfstream.h>
 #include <wx/sizer.h>
+#include <wx/file.h>
 
 #define ID_MENU_FILE_OPEN 1138
 #define ID_MENU_EXIT 1139
@@ -83,7 +84,7 @@ LVLExplorerFrame::~LVLExplorerFrame()
 {
 	if (m_imageData != nullptr)
 	{
-		free(m_imageData);
+		delete[] m_imageData;
 		m_imageData = nullptr;
 	}
 }
@@ -116,7 +117,7 @@ void LVLExplorerFrame::DisplayImage()
 		m_imageWidth = 256;
 		m_imageHeight = 256;
 		size_t size = m_imageWidth * m_imageHeight * 3;
-		m_imageData = (unsigned char*)malloc(size);
+		m_imageData = new uint8_t[size];
 
 		for (int i = 0; i < size; ++i)
 		{
@@ -187,6 +188,10 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 	if (m_currentLVL != nullptr)
 	{
 		ParseChunk(m_currentLVL, m_treeRoot);
+		
+		//wxFile file("chunks.txt", wxFile::write);
+		//file.Write(m_chunkNames);
+		//file.Close();
 	}
 }
 
@@ -239,7 +244,7 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 			delete[] m_imageData;
 		}
 
-		m_imageData = new unsigned char[numPixels * 3];
+		m_imageData = new uint8_t[numPixels * 3];
 		for (size_t i = 0; i < numPixels; ++i)
 		{
 			//let's get rid of the alpha channel
@@ -260,12 +265,10 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 
 void LVLExplorerFrame::ParseChunk(GenericChunk* chunk, wxTreeItemId parent)
 {
-	static int count = 0;
-	if (count > 1000) return;
-	count++;
-
-	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk->GetHeaderName().c_str());
+	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk->GetHeaderName().Buffer());
 	m_treeToChunk.emplace(current, chunk);
+
+	//m_chunkNames += chunk->GetHeaderName().Buffer() + wxString("\n");
 
 	const List<GenericChunk*>& children = chunk->GetChildren();
 	for (size_t i = 0; i < children.Size(); ++i)
