@@ -60,6 +60,8 @@ private:
 	void OnMenuExit(wxCommandEvent& event);
 	void OnTreeSelectionChanges(wxTreeEvent& event);
 
+	//wxString m_chunkNames;
+
 	wxDECLARE_EVENT_TABLE();
 
 public:

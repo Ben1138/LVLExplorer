@@ -11,7 +11,7 @@ LVLExplorerFrame* LVLExplorerApp::m_frame;
 
 bool LVLExplorerApp::OnInit()
 {
-	Logger::SetLogfileLevel(ELogType::Error);
+	Logger::SetLogfileLevel(ELogType::Warning);
 	Logger::SetLogCallback(&SWBF2LogCallback);
 
 	m_frame = new LVLExplorerFrame();
