@@ -9,7 +9,7 @@
 using std::map;
 using LibSWBF2::Chunks::LVL::LVL;
 using LibSWBF2::Chunks::LVL::BODY;
-using LibSWBF2::Chunks::GenericChunk;
+using LibSWBF2::Chunks::GenericBaseChunk;
 using LibSWBF2::Types::List;
 
 class LVLExplorerFrame : public wxFrame
@@ -42,18 +42,17 @@ private:
 	EDisplayStatus m_displayStatus;
 
 	LVL* m_currentLVL;
-	map<wxTreeItemId, GenericChunk*> m_treeToChunk;
+	map<wxTreeItemId, GenericBaseChunk*> m_treeToChunk;
 
 	uint16_t m_imageWidth;
 	uint16_t m_imageHeight;
 	unsigned char* m_imageData = nullptr;
 
-
 private:
 	void DisplayText();
 	void DisplayImage();
 	void HideCurrentDisplay();
-	void ParseChunk(GenericChunk* chunk, wxTreeItemId parent);
+	void ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent);
 
 	// events
 	void OnMenuOpenFile(wxCommandEvent& event);
