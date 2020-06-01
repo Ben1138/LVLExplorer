@@ -220,7 +220,7 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 		return;
 	}
 
-	GenericChunk* chunk = it->second;
+	GenericBaseChunk* chunk = it->second;
 	m_infoText->SetLabel(wxString::Format(
 		"Chunk Position:\t%i\n"
 		"Chunk Data Size:\t%i\n"
@@ -263,14 +263,14 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 	}
 }
 
-void LVLExplorerFrame::ParseChunk(GenericChunk* chunk, wxTreeItemId parent)
+void LVLExplorerFrame::ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent)
 {
 	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk->GetHeaderName().Buffer());
 	m_treeToChunk.emplace(current, chunk);
 
 	//m_chunkNames += chunk->GetHeaderName().Buffer() + wxString("\n");
 
-	const List<GenericChunk*>& children = chunk->GetChildren();
+	const List<GenericBaseChunk*>& children = chunk->GetChildren();
 	for (size_t i = 0; i < children.Size(); ++i)
 	{
 		ParseChunk(children[i], current);
