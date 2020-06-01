@@ -84,7 +84,7 @@ LVLExplorerFrame::~LVLExplorerFrame()
 {
 	if (m_imageData != nullptr)
 	{
-		delete[] m_imageData;
+		free(m_imageData);
 		m_imageData = nullptr;
 	}
 }
@@ -117,16 +117,16 @@ void LVLExplorerFrame::DisplayImage()
 		m_imageWidth = 256;
 		m_imageHeight = 256;
 		size_t size = m_imageWidth * m_imageHeight * 3;
-		m_imageData = new uint8_t[size];
+		m_imageData = (uint8_t*)malloc(size);
 
 		for (int i = 0; i < size; ++i)
 		{
 			// black image
 			m_imageData[i] = 0;
 		}
+		m_imageDisplay->SetImageData(m_imageWidth, m_imageHeight, m_imageData);
 	}
 
-	m_imageDisplay->SetImageData(m_imageWidth, m_imageHeight, m_imageData);
 	m_imageDisplay->Show();
 	m_sizer2->Add(m_imageDisplay, m_rightHandSideFlags);
 	m_sizer2->Layout();
@@ -238,13 +238,16 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 		// this delivers R8 G8 B8 A8
 		textureBodyChunk->GetImageData(m_imageWidth, m_imageHeight, data);
 
+		m_textDisplay->AppendText(wxString::Format("grabbed image data at: %i\n", (int)data));
+		m_textDisplay->AppendText(wxString::Format("chunk position: %i\n", (int)textureBodyChunk->GetPosition()));
+
 		size_t numPixels = m_imageWidth * m_imageHeight;
 		if (m_imageData != nullptr)
 		{
-			delete[] m_imageData;
+			free(m_imageData);
 		}
 
-		m_imageData = new uint8_t[numPixels * 3];
+		m_imageData = (uint8_t*)malloc(numPixels * 3);
 		for (size_t i = 0; i < numPixels; ++i)
 		{
 			//let's get rid of the alpha channel
@@ -253,7 +256,23 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 			m_imageData[(i * 3) + 2] = data[(i * 4) + 2];
 		}
 
+		m_imageDisplay->SetImageData(m_imageWidth, m_imageHeight, m_imageData);
 		DisplayImage();
+		//SetSize(888, 666);
+		//m_imageDisplay->RefreshRect(m_imageDisplay->GetRect());
+		//m_imageDisplay->Refresh();
+		//m_imageDisplay->Update();
+		//Refresh();
+		//Update();
+
+		// stupid workaround...
+		{
+			static int grow = 1;
+			int w, h;
+			GetSize(&w, &h);
+			SetSize(w + grow, h + grow);
+			grow = grow > 0 ? -1 : 1;
+		}
 	}
 	else
 	{

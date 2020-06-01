@@ -46,7 +46,9 @@ private:
 
 	uint16_t m_imageWidth;
 	uint16_t m_imageHeight;
-	unsigned char* m_imageData = nullptr;
+
+	// use malloc, NOT new! See wxImage::SetData documentation
+	uint8_t* m_imageData = nullptr;
 
 private:
 	void DisplayText();
