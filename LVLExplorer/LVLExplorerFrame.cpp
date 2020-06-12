@@ -236,7 +236,7 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 		uint8_t* data;
 
 		// this delivers R8 G8 B8 A8
-		textureBodyChunk->GetImageData(m_imageWidth, m_imageHeight, data);
+		textureBodyChunk->GetImageData(ETextureFormat::R8_G8_B8_A8, m_imageWidth, m_imageHeight, data);
 
 		m_textDisplay->AppendText(wxString::Format("grabbed image data at: %i\n", (int)data));
 		m_textDisplay->AppendText(wxString::Format("chunk position: %i\n", (int)textureBodyChunk->GetPosition()));
