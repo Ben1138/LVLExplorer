@@ -11,6 +11,7 @@ using LibSWBF2::Chunks::LVL::LVL;
 using LibSWBF2::Chunks::LVL::LVL_texture::BODY;
 using LibSWBF2::Chunks::GenericBaseChunk;
 using LibSWBF2::Types::List;
+using LibSWBF2::ETextureFormat;
 
 class LVLExplorerFrame : public wxFrame
 {
