@@ -2,9 +2,9 @@
 
 wxIMPLEMENT_APP(LVLExplorerApp);
 
+using LibSWBF2::ELogType;
 using LibSWBF2::Logging::Logger;
 using LibSWBF2::Logging::LogCallback;
-using LibSWBF2::Logging::ELogType;
 
 
 LVLExplorerFrame* LVLExplorerApp::m_frame;
@@ -21,5 +21,5 @@ bool LVLExplorerApp::OnInit()
 
 void LVLExplorerApp::SWBF2LogCallback(const LoggerEntry* loggerEntry)
 {
-	m_frame->AddLogLine(loggerEntry->ToString().c_str());
+	m_frame->AddLogLine(loggerEntry->ToString().Buffer());
 }
