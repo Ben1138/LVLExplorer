@@ -7,11 +7,13 @@
 #define ID_MENU_FILE_OPEN 1138
 #define ID_MENU_EXIT 1139
 #define ID_TREE_VIEW 1140
+#define ID_SEARCH 1141
 
 wxBEGIN_EVENT_TABLE(LVLExplorerFrame, wxFrame)
 	EVT_MENU(ID_MENU_FILE_OPEN, OnMenuOpenFile)
 	EVT_MENU(ID_MENU_EXIT, OnMenuExit)
 	EVT_TREE_SEL_CHANGED(ID_TREE_VIEW, OnTreeSelectionChanges)
+	EVT_TEXT_ENTER(ID_SEARCH, OnSearch)
 wxEND_EVENT_TABLE()
 
 LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
@@ -33,11 +35,20 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 
 	m_panelMain = new wxPanel(this, wxID_ANY);
 
+	m_searchBox = new wxTextCtrl(
+		m_panelMain,
+		ID_SEARCH,
+		"",
+		wxDefaultPosition,
+		wxDefaultSize,
+		wxTE_PROCESS_ENTER
+	);
+
 	m_lvlTreeCtrl = new wxTreeCtrl(
 		m_panelMain,
 		ID_TREE_VIEW,
 		wxDefaultPosition,
-		wxSize(200, 400)
+		wxDefaultSize
 	);
 
 	m_textDisplay = new wxTextCtrl(
@@ -46,7 +57,8 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 		"",
 		wxDefaultPosition,
 		wxDefaultSize,
-		wxTE_MULTILINE);
+		wxTE_MULTILINE
+	);
 	m_textDisplay->Hide();
 
 	m_imageDisplay = new wxImagePanel(m_panelMain);
@@ -66,14 +78,18 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 	m_infoText->SetMinSize(wxSize(400, 50));
 	m_infoText->SetMaxSize(wxSize(400, 50));
 
-	m_sizer1 = new wxBoxSizer(wxHORIZONTAL);
-	m_sizer1->Add(m_lvlTreeCtrl, wxSizerFlags().Expand().Proportion(1).Border(wxALL, 10));
-	m_panelMain->SetSizer(m_sizer1);
+	m_sizerHorizontal = new wxBoxSizer(wxHORIZONTAL);
+	m_panelMain->SetSizer(m_sizerHorizontal);
 	m_panelMain->SetAutoLayout(true);
 
-	m_sizer2 = new wxBoxSizer(wxVERTICAL);
-	m_sizer2->Add(m_infoText, wxSizerFlags().Proportion(1).Border(wxTOP, 10));
-	m_sizer1->Add(m_sizer2, wxSizerFlags().Expand().Proportion(2));
+	m_sizerLeft = new wxBoxSizer(wxVERTICAL);
+	m_sizerLeft->Add(m_searchBox, wxSizerFlags().Expand().Border(wxBOTTOM, 10));
+	m_sizerLeft->Add(m_lvlTreeCtrl, wxSizerFlags().Expand().Proportion(1));
+	m_sizerHorizontal->Add(m_sizerLeft, wxSizerFlags().Expand().Proportion(1).Border(wxALL, 10));
+
+	m_sizerRight = new wxBoxSizer(wxVERTICAL);
+	m_sizerRight->Add(m_infoText, wxSizerFlags().Proportion(1).Border(wxTOP, 10));
+	m_sizerHorizontal->Add(m_sizerRight, wxSizerFlags().Expand().Proportion(2));
 
 	m_rightHandSideFlags = wxSizerFlags().Expand().Proportion(2).Border(wxTOP | wxRIGHT | wxBOTTOM, 10);
 	m_displayStatus = EDisplayStatus::NONE;
@@ -98,8 +114,8 @@ void LVLExplorerFrame::DisplayText()
 		HideCurrentDisplay();
 
 	m_textDisplay->Show();
-	m_sizer2->Add(m_textDisplay, m_rightHandSideFlags);
-	m_sizer2->Layout();
+	m_sizerRight->Add(m_textDisplay, m_rightHandSideFlags);
+	m_sizerRight->Layout();
 	m_panelMain->Layout();
 	m_displayStatus = EDisplayStatus::TEXT;
 }
@@ -128,8 +144,8 @@ void LVLExplorerFrame::DisplayImage()
 	}
 
 	m_imageDisplay->Show();
-	m_sizer2->Add(m_imageDisplay, m_rightHandSideFlags);
-	m_sizer2->Layout();
+	m_sizerRight->Add(m_imageDisplay, m_rightHandSideFlags);
+	m_sizerRight->Layout();
 	m_panelMain->Layout();
 	m_displayStatus = EDisplayStatus::IMAGE;
 }
@@ -141,11 +157,11 @@ void LVLExplorerFrame::HideCurrentDisplay()
 		case EDisplayStatus::NONE:
 			return;
 		case EDisplayStatus::TEXT:
-			m_sizer2->Remove(1);
+			m_sizerRight->Remove(1);
 			m_textDisplay->Hide();
 			break;
 		case EDisplayStatus::IMAGE:
-			m_sizer2->Remove(1);
+			m_sizerRight->Remove(1);
 			m_imageDisplay->Hide();
 			break;
 		default:
@@ -282,9 +298,56 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 	}
 }
 
+bool LVLExplorerFrame::SearchTree(wxTreeItemId parent, const wxString& search)
+{
+	wxTreeItemIdValue cookie;
+	wxTreeItemId next = m_lvlTreeCtrl->GetFirstChild(parent, cookie);
+	bool bFoundInChildren = false;
+	while (next.IsOk())
+	{
+		bFoundInChildren = SearchTree(next, search) || bFoundInChildren;
+		next = m_lvlTreeCtrl->GetNextChild(parent, cookie);
+	}
+
+	bool bFound = m_lvlTreeCtrl->GetItemText(parent).Contains(search);
+	if (bFound && !bFoundInChildren)
+	{
+		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR_FOUND);
+		m_lvlTreeCtrl->Collapse(parent);
+	}
+	else if (bFound && bFoundInChildren)
+	{
+		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR_FOUND);
+		m_lvlTreeCtrl->Expand(parent);
+	}
+	else if (!bFound && bFoundInChildren)
+	{
+		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR_FOUND_CHILDREN);
+		m_lvlTreeCtrl->Expand(parent);
+	}
+	else
+	{
+		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR);
+		m_lvlTreeCtrl->Collapse(parent);
+	}
+	return bFound || bFoundInChildren;
+};
+
+void LVLExplorerFrame::OnSearch(wxCommandEvent& event)
+{
+	if (!m_treeRoot.IsOk())
+	{
+		return;
+	}
+
+	wxString search = event.GetString();
+	SearchTree(m_treeRoot, search);
+}
+
 void LVLExplorerFrame::ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent)
 {
 	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk->GetHeaderName().Buffer());
+	m_lvlTreeCtrl->SetItemTextColour(current, ITEM_COLOR);
 	m_treeToChunk.emplace(current, chunk);
 
 	//m_chunkNames += chunk->GetHeaderName().Buffer() + wxString("\n");

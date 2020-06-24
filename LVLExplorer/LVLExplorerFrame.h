@@ -27,12 +27,18 @@ private:
 		IMAGE
 	};
 
+	const wxColor ITEM_COLOR = wxColor(0, 0, 0);
+	const wxColor ITEM_COLOR_FOUND = wxColor(0, 160, 0);
+	const wxColor ITEM_COLOR_FOUND_CHILDREN = wxColor(160, 160, 0);
+
 private:
 	wxMenuBar* m_menuMain;
 	wxMenu* m_fileMenu;
 	wxPanel* m_panelMain;
-	wxBoxSizer* m_sizer1;
-	wxBoxSizer* m_sizer2;
+	wxBoxSizer* m_sizerLeft;
+	wxBoxSizer* m_sizerHorizontal;
+	wxBoxSizer* m_sizerRight;
+	wxTextCtrl* m_searchBox;
 	wxTreeCtrl* m_lvlTreeCtrl;
 	wxStaticText* m_infoText;
 	wxTextCtrl* m_textDisplay;
@@ -56,11 +62,13 @@ private:
 	void DisplayImage();
 	void HideCurrentDisplay();
 	void ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent);
+	bool SearchTree(wxTreeItemId parent, const wxString& search);
 
 	// events
 	void OnMenuOpenFile(wxCommandEvent& event);
 	void OnMenuExit(wxCommandEvent& event);
 	void OnTreeSelectionChanges(wxTreeEvent& event);
+	void OnSearch(wxCommandEvent& event);
 
 	//wxString m_chunkNames;
 
