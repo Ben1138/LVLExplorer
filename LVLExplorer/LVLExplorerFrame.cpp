@@ -309,24 +309,28 @@ bool LVLExplorerFrame::SearchTree(wxTreeItemId parent, const wxString& search)
 		next = m_lvlTreeCtrl->GetNextChild(parent, cookie);
 	}
 
-	bool bFound = m_lvlTreeCtrl->GetItemText(parent).Contains(search);
+	bool bFound = !search.IsEmpty() && m_lvlTreeCtrl->GetItemText(parent).Contains(search);
 	if (bFound && !bFoundInChildren)
 	{
+		m_lvlTreeCtrl->SetItemBackgroundColour(parent, ITEM_COLOR_FOUND_BACKGROUND);
 		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR_FOUND);
 		m_lvlTreeCtrl->Collapse(parent);
 	}
 	else if (bFound && bFoundInChildren)
 	{
+		m_lvlTreeCtrl->SetItemBackgroundColour(parent, ITEM_COLOR_FOUND_BACKGROUND);
 		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR_FOUND);
 		m_lvlTreeCtrl->Expand(parent);
 	}
 	else if (!bFound && bFoundInChildren)
 	{
+		m_lvlTreeCtrl->SetItemBackgroundColour(parent, ITEM_COLOR_FOUND_BACKGROUND);
 		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR_FOUND_CHILDREN);
 		m_lvlTreeCtrl->Expand(parent);
 	}
 	else
 	{
+		m_lvlTreeCtrl->SetItemBackgroundColour(parent, ITEM_COLOR_BACKGROUND);
 		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR);
 		m_lvlTreeCtrl->Collapse(parent);
 	}
@@ -347,6 +351,7 @@ void LVLExplorerFrame::OnSearch(wxCommandEvent& event)
 void LVLExplorerFrame::ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent)
 {
 	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk->GetHeaderName().Buffer());
+	m_lvlTreeCtrl->SetItemBackgroundColour(current, ITEM_COLOR_BACKGROUND);
 	m_lvlTreeCtrl->SetItemTextColour(current, ITEM_COLOR);
 	m_treeToChunk.emplace(current, chunk);
 
