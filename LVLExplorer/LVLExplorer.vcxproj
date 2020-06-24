@@ -167,6 +167,7 @@
   <ItemGroup>
     <ClInclude Include="LVLExplorerApp.h" />
     <ClInclude Include="LVLExplorerFrame.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="wxImagePanel.h" />
   </ItemGroup>
   <ItemGroup>
