@@ -18,3 +18,6 @@ public:
 	virtual bool OnInit();
 };
 
+/* ---- CREDITS ----
+ * ICON: adrenochromedream, http://www.rw-designer.com/user/adrenochromedream
+ */
