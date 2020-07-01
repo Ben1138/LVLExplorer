@@ -348,9 +348,9 @@ void LVLExplorerFrame::OnSearch(wxCommandEvent& event)
 	SearchTree(m_treeRoot, search);
 }
 
-void LVLExplorerFrame::ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent)
+void LVLExplorerFrame::ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent, size_t childIndex)
 {
-	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, chunk->GetHeaderName().Buffer());
+	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, wxString::Format("[%i] %s", childIndex, chunk->GetHeaderName().Buffer()));
 	m_lvlTreeCtrl->SetItemBackgroundColour(current, ITEM_COLOR_BACKGROUND);
 	m_lvlTreeCtrl->SetItemTextColour(current, ITEM_COLOR);
 	m_treeToChunk.emplace(current, chunk);
@@ -360,7 +360,7 @@ void LVLExplorerFrame::ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent)
 	const List<GenericBaseChunk*>& children = chunk->GetChildren();
 	for (size_t i = 0; i < children.Size(); ++i)
 	{
-		ParseChunk(children[i], current);
+		ParseChunk(children[i], current, i);
 	}
 }
 
