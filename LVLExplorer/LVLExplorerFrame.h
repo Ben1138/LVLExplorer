@@ -63,7 +63,7 @@ private:
 	void DisplayText();
 	void DisplayImage();
 	void HideCurrentDisplay();
-	void ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent);
+	void ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent, size_t childIndex=0);
 	bool SearchTree(wxTreeItemId parent, const wxString& search);
 
 	// events
