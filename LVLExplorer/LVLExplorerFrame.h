@@ -30,6 +30,7 @@ private:
 	const wxColor ITEM_COLOR = wxColor(0, 0, 0);
 	const wxColor ITEM_COLOR_BACKGROUND = wxColor(255, 255, 255);
 	const wxColor ITEM_COLOR_FOUND = wxColor(0, 220, 0);
+	const wxColor ITEM_COLOR_FOUND_IN_INFO = wxColor(200, 100, 100);
 	const wxColor ITEM_COLOR_FOUND_BACKGROUND = wxColor(32, 32, 32);
 	const wxColor ITEM_COLOR_FOUND_CHILDREN = wxColor(220, 220, 0);
 
