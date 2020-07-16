@@ -249,7 +249,7 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 	BODY* textureBodyChunk = dynamic_cast<BODY*>(chunk);
 	if (textureBodyChunk != nullptr)
 	{
-		uint8_t* data;
+		const uint8_t* data;
 
 		// this delivers R8 G8 B8 A8
 		textureBodyChunk->GetImageData(ETextureFormat::R8_G8_B8_A8, m_imageWidth, m_imageHeight, data);
@@ -309,17 +309,29 @@ bool LVLExplorerFrame::SearchTree(wxTreeItemId parent, const wxString& search)
 		next = m_lvlTreeCtrl->GetNextChild(parent, cookie);
 	}
 
-	bool bFound = !search.IsEmpty() && m_lvlTreeCtrl->GetItemText(parent).Contains(search);
+	if (search.IsEmpty())
+		return false;
+
+
+	bool bFoundInInfo = false;
+	auto it = m_treeToChunk.find(parent);
+	if (it != m_treeToChunk.end())
+	{
+		GenericBaseChunk* chunk = it->second;
+		bFoundInInfo = wxString(chunk->ToString().Buffer()).Contains(search);
+	}
+
+	bool bFound = bFoundInInfo || m_lvlTreeCtrl->GetItemText(parent).Contains(search);
 	if (bFound && !bFoundInChildren)
 	{
 		m_lvlTreeCtrl->SetItemBackgroundColour(parent, ITEM_COLOR_FOUND_BACKGROUND);
-		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR_FOUND);
+		m_lvlTreeCtrl->SetItemTextColour(parent, bFoundInInfo ? ITEM_COLOR_FOUND_IN_INFO : ITEM_COLOR_FOUND);
 		m_lvlTreeCtrl->Collapse(parent);
 	}
 	else if (bFound && bFoundInChildren)
 	{
 		m_lvlTreeCtrl->SetItemBackgroundColour(parent, ITEM_COLOR_FOUND_BACKGROUND);
-		m_lvlTreeCtrl->SetItemTextColour(parent, ITEM_COLOR_FOUND);
+		m_lvlTreeCtrl->SetItemTextColour(parent, bFoundInInfo ? ITEM_COLOR_FOUND_IN_INFO : ITEM_COLOR_FOUND);
 		m_lvlTreeCtrl->Expand(parent);
 	}
 	else if (!bFound && bFoundInChildren)
@@ -350,7 +362,7 @@ void LVLExplorerFrame::OnSearch(wxCommandEvent& event)
 
 void LVLExplorerFrame::ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent, size_t childIndex)
 {
-	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, wxString::Format("[%i] %s", childIndex, chunk->GetHeaderName().Buffer()));
+	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, wxString::Format("[%i] %s", (int)childIndex, chunk->GetHeaderName().Buffer()));
 	m_lvlTreeCtrl->SetItemBackgroundColour(current, ITEM_COLOR_BACKGROUND);
 	m_lvlTreeCtrl->SetItemTextColour(current, ITEM_COLOR);
 	m_treeToChunk.emplace(current, chunk);
