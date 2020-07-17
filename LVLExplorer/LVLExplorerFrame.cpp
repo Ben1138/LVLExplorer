@@ -172,8 +172,8 @@ void LVLExplorerFrame::HideCurrentDisplay()
 
 void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 {
-	wxFileDialog dialog(this, "Open *.lvl file", "", "",
-		"LVL file (*.lvl)|*.lvl", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+	wxFileDialog dialog(this, "Open Level container file", "", "",
+		"SWBF2 Level file (*.lvl)|*.lvl|zafbin Animation file (*.zafbin)|*.zafbin|zaabin Animation file (*.zaabin)|*.zaabin", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (dialog.ShowModal() == wxID_CANCEL)
 		return;
