@@ -28,7 +28,7 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 
 	m_menuMain = new wxMenuBar();
 	m_fileMenu = new wxMenu();
-	m_fileMenu->Append(ID_MENU_FILE_OPEN, "Open *.lvl File");
+	m_fileMenu->Append(ID_MENU_FILE_OPEN, "Open");
 	m_fileMenu->Append(ID_MENU_EXIT, "Exit");
 	m_menuMain->Append(m_fileMenu, "File");
 	SetMenuBar(m_menuMain);
