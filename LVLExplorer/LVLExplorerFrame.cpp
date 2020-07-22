@@ -318,7 +318,17 @@ bool LVLExplorerFrame::SearchTree(wxTreeItemId parent, const wxString& search)
 	if (it != m_treeToChunk.end())
 	{
 		GenericBaseChunk* chunk = it->second;
-		bFoundInInfo = wxString(chunk->ToString().Buffer()).Contains(search);
+		try
+		{
+			// sometimes, someone (not LibSWBF2) throws a "string too long" exception (msvcp140d.dll??)
+			// I'm too lazy right now to dive depp into that... just ignore that chunk... TODO
+			bFoundInInfo = wxString(chunk->ToString().Buffer()).Contains(search);
+		}
+		catch (std::exception& e)
+		{
+			//m_textDisplay->AppendText(e.what());
+			bFoundInInfo = false;
+		}
 	}
 
 	bool bFound = bFoundInInfo || m_lvlTreeCtrl->GetItemText(parent).Contains(search);
