@@ -8,6 +8,7 @@
 
 using std::map;
 using LibSWBF2::Chunks::LVL::LVL;
+using LibSWBF2::Chunks::BNK::BNK;
 using LibSWBF2::Chunks::LVL::LVL_texture::BODY;
 using LibSWBF2::Chunks::GenericBaseChunk;
 using LibSWBF2::Types::List;
@@ -51,7 +52,7 @@ private:
 	wxSizerFlags m_rightHandSideFlags;
 	EDisplayStatus m_displayStatus;
 
-	LVL* m_currentLVL;
+	GenericBaseChunk* m_currentContainer;
 	map<wxTreeItemId, GenericBaseChunk*> m_treeToChunk;
 
 	uint16_t m_imageWidth;
@@ -66,6 +67,7 @@ private:
 	void HideCurrentDisplay();
 	void ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent, size_t childIndex=0);
 	bool SearchTree(wxTreeItemId parent, const wxString& search);
+	void DestroyChunkContainer();
 
 	// events
 	void OnMenuOpenFile(wxCommandEvent& event);
