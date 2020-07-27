@@ -3,6 +3,7 @@
 #include <wx/wfstream.h>
 #include <wx/sizer.h>
 #include <wx/file.h>
+#include <wx/filename.h>
 
 #define ID_MENU_FILE_OPEN 1138
 #define ID_MENU_EXIT 1139
@@ -64,7 +65,7 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 	m_imageDisplay = new wxImagePanel(m_panelMain);
 	m_imageDisplay->Hide();
 	m_imageData = nullptr;
-	m_currentLVL = nullptr;
+	m_currentContainer = nullptr;
 
 	m_infoText = new wxStaticText(
 		m_panelMain,
@@ -103,6 +104,35 @@ LVLExplorerFrame::~LVLExplorerFrame()
 		free(m_imageData);
 		m_imageData = nullptr;
 	}
+
+	DestroyChunkContainer();
+}
+
+void LVLExplorerFrame::DestroyChunkContainer()
+{
+	if (m_currentContainer == nullptr)
+		return;
+
+	LVL* lvl = dynamic_cast<LVL*>(m_currentContainer);
+	if (lvl != nullptr)
+	{
+		LVL::Destroy(lvl);
+		m_currentContainer = nullptr;
+		return;
+	}
+
+	BNK* soundBank = dynamic_cast<BNK*>(m_currentContainer);
+	if (soundBank != nullptr)
+	{
+		BNK::Destroy(soundBank);
+		m_currentContainer = nullptr;
+		return;
+	}
+
+	wxMessageBox(
+		"Unkown Chunk Container Type!",
+		"Error",
+		wxICON_ERROR);
 }
 
 void LVLExplorerFrame::DisplayText()
@@ -173,7 +203,7 @@ void LVLExplorerFrame::HideCurrentDisplay()
 void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 {
 	wxFileDialog dialog(this, "Open Level container file", "", "",
-		"SWBF2 Level file (*.lvl)|*.lvl|zafbin Animation file (*.zafbin)|*.zafbin|zaabin Animation file (*.zaabin)|*.zaabin", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+		"SWBF2 Level (*.lvl)|*.lvl|zafbin Animation (*.zafbin)|*.zafbin|zaabin Animation (*.zaabin)|*.zaabin|Sound Bank (*.bnk)|*.bnk", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (dialog.ShowModal() == wxID_CANCEL)
 		return;
@@ -181,29 +211,48 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 	m_lvlTreeCtrl->DeleteAllItems();
 	m_treeToChunk.clear();
 
-	if (m_currentLVL != nullptr)
+	if (m_currentContainer != nullptr)
 	{
-		LVL::Destroy(m_currentLVL);
-		m_currentLVL = nullptr;
+		DestroyChunkContainer();
 	}
 
-	m_currentLVL = LVL::Create();
-	if (!m_currentLVL->ReadFromFile(dialog.GetPath().c_str().AsChar()))
+	wxString path = dialog.GetPath();
+	wxFileName fileName(path);
+	wxString fileExt = fileName.GetExt().Lower();
+
+	if (fileExt == "lvl" || fileExt == "zafbin" || fileExt == "zaabin")
+	{
+		m_currentContainer = LVL::Create();
+	}
+	else if (fileExt == "bnk")
+	{
+		m_currentContainer = BNK::Create();
+	}
+	else
 	{
 		wxMessageBox(
-			wxString::Format("Errors occoured while opening file '%s'!", dialog.GetPath()),
+			wxString::Format("Unknown file extension '%s'!", fileExt),
+			"Error",
+			wxICON_ERROR);
+		return;
+	}
+
+	if (!m_currentContainer->ReadFromFile(path.c_str().AsChar()))
+	{
+		wxMessageBox(
+			wxString::Format("Errors occoured while opening file '%s'!", path),
 			"Error",
 			wxICON_ERROR);
 
-		//LVL::Destroy(m_currentLVL);
-		//m_currentLVL = nullptr;
+		//LVL::Destroy(m_currentContainer);
+		//m_currentContainer = nullptr;
 		//return;
 	}
 
 	m_treeRoot = m_lvlTreeCtrl->AddRoot(dialog.GetFilename().c_str().AsChar());
-	if (m_currentLVL != nullptr)
+	if (m_currentContainer != nullptr)
 	{
-		ParseChunk(m_currentLVL, m_treeRoot);
+		ParseChunk(m_currentContainer, m_treeRoot);
 		
 		//wxFile file("chunks.txt", wxFile::write);
 		//file.Write(m_chunkNames);

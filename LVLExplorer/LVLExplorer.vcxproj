@@ -112,6 +112,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\ThirdParty\wxWidgets\lib\vc_x64_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)ThirdParty\LibSWBF2\lookup.csv" "$(OutDir)lookup.csv " /y
+copy "$(SolutionDir)ThirdParty\LibSWBF2\lookup.csv" "$(SolutionDir)LVLExplorer\lookup.csv " /y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -151,6 +155,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(ProjectDir)..\ThirdParty\wxWidgets\lib\vc_x64_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)ThirdParty\LibSWBF2\lookup.csv" "$(OutDir)lookup.csv " /y
+copy "$(SolutionDir)ThirdParty\LibSWBF2\lookup.csv" "$(SolutionDir)LVLExplorer\lookup.csv " /y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ResourceCompile Include="LVLExplorer.rc" />
