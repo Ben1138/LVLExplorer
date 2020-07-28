@@ -361,3 +361,13 @@ FodyWeavers.xsd
 
 # copied csv from LibSWBF2 submodule
 LVLExplorer/lookup.csv
+
+# CMake stuff
+
+#CMake ignores
+**/build
+build
+build/*
+**/build/*
+
+notes.txt
