@@ -37,9 +37,7 @@ include_directories(LVLExplorer)
 file(GLOB SOURCE_FILES LVLExplorer/*.cpp)
 target_sources(lvlexplorer PUBLIC ${SOURCE_FILES})
 
-if (APPLE)
-	target_compile_options(lvlexplorer PUBLIC -DNDEBUG)
-endif()
+target_compile_options(lvlexplorer PUBLIC -DNDEBUG)
 
 find_package(wxWidgets REQUIRED COMPONENTS base core html gl)
 
@@ -50,16 +48,6 @@ else()
 	message(ERROR "Couldn't find wxWidgets!")
 endif()
 
-
-
-#[[
-target_compile_options(lvlexplorer PUBLIC -I/Users/will/Downloads/wxWidgets-3.0.5/build-cocoa-debug/lib/wx/include/osx_cocoa-unicode-3.0 -I/Users/will/Downloads/wxWidgets-3.0.5/include -D_FILE_OFFSET_BITS=64 -DWXUSINGDLL -D__WXMAC__ -D__WXOSX__ -D__WXOSX_COCOA__)
-
-#target_include_directories(lvlexplorer PUBLIC /Users/will/Downloads/wxWidgets-3.0.5/build-cocoa-debug/lib/wx/include/osx_cocoa-unicode-3.0/)
-
-#target_link_directories(lvlexplorer PUBLIC /Users/will/Downloads/wxWidgets-3.0.5/build-cocoa-debug/lib/)
-target_link_options(lvlexplorer PUBLIC -L/Users/will/Downloads/wxWidgets-3.0.5/build-cocoa-debug/lib   -lwx_osx_cocoau_xrc-3.0 -lwx_osx_cocoau_html-3.0 -lwx_osx_cocoau_qa-3.0 -lwx_osx_cocoau_adv-3.0 -lwx_osx_cocoau_core-3.0 -lwx_baseu_xml-3.0  -lwx_baseu-3.0)
-]]
 
 set(LIBSWBF2_INCLUDES_DIR $ENV{LIBSWBF2_INCLUDE})
 set(LIBSWBF2_LIBS_DIR $ENV{LIBSWBF2_LIB})
@@ -74,7 +62,6 @@ endif()
 
 
 #Redundant/harmless additions to catch underconfigured systems...
-
 if (APPLE)
 	include_directories(/usr/local/include)
 	target_link_options(lvlexplorer PUBLIC -undefined dynamic_lookup)
