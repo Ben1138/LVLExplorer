@@ -5,16 +5,17 @@
 #include <wx/file.h>
 #include <wx/filename.h>
 
+
 #define ID_MENU_FILE_OPEN 1138
 #define ID_MENU_EXIT 1139
 #define ID_TREE_VIEW 1140
 #define ID_SEARCH 1141
 
 wxBEGIN_EVENT_TABLE(LVLExplorerFrame, wxFrame)
-	EVT_MENU(ID_MENU_FILE_OPEN, OnMenuOpenFile)
-	EVT_MENU(ID_MENU_EXIT, OnMenuExit)
-	EVT_TREE_SEL_CHANGED(ID_TREE_VIEW, OnTreeSelectionChanges)
-	EVT_TEXT_ENTER(ID_SEARCH, OnSearch)
+	EVT_MENU(ID_MENU_FILE_OPEN, LVLExplorerFrame::OnMenuOpenFile)
+	EVT_MENU(ID_MENU_EXIT, LVLExplorerFrame::OnMenuExit)
+	EVT_TREE_SEL_CHANGED(ID_TREE_VIEW, LVLExplorerFrame::OnTreeSelectionChanges)
+	EVT_TEXT_ENTER(ID_SEARCH, LVLExplorerFrame::OnSearch)
 wxEND_EVENT_TABLE()
 
 LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
@@ -303,8 +304,8 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 		// this delivers R8 G8 B8 A8
 		textureBodyChunk->GetImageData(ETextureFormat::R8_G8_B8_A8, m_imageWidth, m_imageHeight, data);
 
-		m_textDisplay->AppendText(wxString::Format("grabbed image data at: %i\n", (int)data));
-		m_textDisplay->AppendText(wxString::Format("chunk position: %i\n", (int)textureBodyChunk->GetPosition()));
+		m_textDisplay->AppendText(wxString::Format("grabbed image data at: %i\n", (int)(size_t)data));
+		m_textDisplay->AppendText(wxString::Format("chunk position: %i\n", (int)(size_t)textureBodyChunk->GetPosition()));
 
 		size_t numPixels = m_imageWidth * m_imageHeight;
 		if (m_imageData != nullptr)

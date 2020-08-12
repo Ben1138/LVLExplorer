@@ -1,5 +1,9 @@
-// LVLExplorer.cpp : Defines the entry point for the application.
-//
+// LVLExplorer.cpp : Defines the entry point for the application
+// on Windows.
+
+#ifdef _WIN32
+
+
 
 #include "framework.h"
 #include "LVLExplorer.h"
@@ -178,3 +182,5 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return (INT_PTR)FALSE;
 }
+
+#endif //ifdef _WIN32
