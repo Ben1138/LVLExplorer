@@ -297,6 +297,14 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 	));
 
 	BODY* textureBodyChunk = dynamic_cast<BODY*>(chunk);
+
+	// Display first mip map texture of first found format if a tex_ chunk is selected
+	tex_* textureChunk = dynamic_cast<tex_*>(chunk);
+	if (textureChunk != nullptr && textureChunk->m_FMTs.Size() > 0 && textureChunk->m_FMTs[0]->p_Face->m_LVLs.Size() > 0)
+	{
+		textureBodyChunk = textureChunk->m_FMTs[0]->p_Face->m_LVLs[0]->p_Body;
+	}
+
 	if (textureBodyChunk != nullptr)
 	{
 		const uint8_t* data;
