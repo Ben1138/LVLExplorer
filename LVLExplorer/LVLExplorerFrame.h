@@ -9,6 +9,7 @@
 using std::map;
 using LibSWBF2::Chunks::LVL::LVL;
 using LibSWBF2::Chunks::BNK::BNK;
+using LibSWBF2::Chunks::LVL::texture::tex_;
 using LibSWBF2::Chunks::LVL::LVL_texture::BODY;
 using LibSWBF2::Chunks::GenericBaseChunk;
 using LibSWBF2::Types::List;
