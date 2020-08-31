@@ -204,7 +204,7 @@ void LVLExplorerFrame::HideCurrentDisplay()
 void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 {
 	wxFileDialog dialog(this, "Open Level container file", "", "",
-		"SWBF2 Level (*.lvl)|*.lvl|zafbin Animation (*.zafbin)|*.zafbin|zaabin Animation (*.zaabin)|*.zaabin|Sound Bank (*.bnk)|*.bnk", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+		"SWBF2 Level (*.lvl)|*.lvl|zafbin Animation (*.zafbin)|*.zafbin|zaabin Animation (*.zaabin)|*.zaabin|Sound Bank (*.bnk)|*.bnk|Compiled SWBF2 LUA Script (*.script)|*.script", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (dialog.ShowModal() == wxID_CANCEL)
 		return;
@@ -221,7 +221,7 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 	wxFileName fileName(path);
 	wxString fileExt = fileName.GetExt().Lower();
 
-	if (fileExt == "lvl" || fileExt == "zafbin" || fileExt == "zaabin")
+	if (fileExt == "lvl" || fileExt == "zafbin" || fileExt == "zaabin" || fileExt == "script")
 	{
 		m_currentContainer = LVL::Create();
 	}
