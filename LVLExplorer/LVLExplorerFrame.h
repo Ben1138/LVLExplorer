@@ -3,8 +3,11 @@
 #include <wx/wx.h>
 #include <wx/treectrl.h>
 #include <wx/menu.h>
+#include <wx/progdlg.h>
 #include "wxImagePanel.h"
 #include "LibSWBF2.h"
+#include "Chunks/LVL/tex_/tex_.h"
+#include "Chunks/LVL/tex_/BODY.h"
 
 using std::map;
 using LibSWBF2::Chunks::LVL::LVL;
@@ -14,6 +17,13 @@ using LibSWBF2::Chunks::LVL::LVL_texture::BODY;
 using LibSWBF2::Chunks::GenericBaseChunk;
 using LibSWBF2::Types::List;
 using LibSWBF2::ETextureFormat;
+using LibSWBF2::ELogType;
+using LibSWBF2::ELoadStatus;
+using LibSWBF2::Container;
+using LibSWBF2::SWBF2Handle;
+using LibSWBF2::Wrappers::Level;
+using LibSWBF2::Logging::Logger;
+using LibSWBF2::Logging::LoggerEntry;
 
 class LVLExplorerFrame : public wxFrame
 {
@@ -37,6 +47,9 @@ private:
 	const wxColor ITEM_COLOR_FOUND_CHILDREN = wxColor(220, 220, 0);
 
 private:
+	//wxTimer m_timer;
+	wxProgressDialog* m_progress;
+
 	wxMenuBar* m_menuMain;
 	wxMenu* m_fileMenu;
 	wxPanel* m_panelMain;
@@ -53,8 +66,8 @@ private:
 	wxSizerFlags m_rightHandSideFlags;
 	EDisplayStatus m_displayStatus;
 
-	GenericBaseChunk* m_currentContainer;
-	map<wxTreeItemId, GenericBaseChunk*> m_treeToChunk;
+	Container* m_currentContainer;
+	map<wxTreeItemId, const GenericBaseChunk*> m_treeToChunk;
 
 	uint16_t m_imageWidth;
 	uint16_t m_imageHeight;
@@ -66,20 +79,17 @@ private:
 	void DisplayText();
 	void DisplayImage();
 	void HideCurrentDisplay();
-	void ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent, size_t childIndex=0);
+	void ParseChunk(const GenericBaseChunk* chunk, wxTreeItemId parent, size_t childIndex=0);
 	bool SearchTree(wxTreeItemId parent, const wxString& search);
-	void DestroyChunkContainer();
+	void DestroyLibContainer();
+	void AddLogLine(wxString msg);
 
 	// events
 	void OnMenuOpenFile(wxCommandEvent& event);
 	void OnMenuExit(wxCommandEvent& event);
 	void OnTreeSelectionChanges(wxTreeEvent& event);
 	void OnSearch(wxCommandEvent& event);
-
-	//wxString m_chunkNames;
+	void OnIdle(wxIdleEvent& event);
 
 	wxDECLARE_EVENT_TABLE();
-
-public:
-	void AddLogLine(wxString msg);
 };
