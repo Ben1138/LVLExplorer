@@ -16,6 +16,7 @@ wxBEGIN_EVENT_TABLE(LVLExplorerFrame, wxFrame)
 	EVT_MENU(ID_MENU_EXIT, LVLExplorerFrame::OnMenuExit)
 	EVT_TREE_SEL_CHANGED(ID_TREE_VIEW, LVLExplorerFrame::OnTreeSelectionChanges)
 	EVT_TEXT_ENTER(ID_SEARCH, LVLExplorerFrame::OnSearch)
+	EVT_IDLE(LVLExplorerFrame::OnIdle)
 wxEND_EVENT_TABLE()
 
 LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
@@ -27,6 +28,10 @@ LVLExplorerFrame::LVLExplorerFrame() : wxFrame(
 {
 	this->CenterOnScreen();
 	SetMinSize(wxSize(600, 400));
+
+	Logger::SetLogfileLevel(ELogType::Warning);
+	//m_timer.Bind(wxEVT_TIMER, &LVLExplorerFrame::OnIdle, this);
+	//m_timer.Start(100);
 
 	m_menuMain = new wxMenuBar();
 	m_fileMenu = new wxMenu();
@@ -106,34 +111,16 @@ LVLExplorerFrame::~LVLExplorerFrame()
 		m_imageData = nullptr;
 	}
 
-	DestroyChunkContainer();
+	DestroyLibContainer();
 }
 
-void LVLExplorerFrame::DestroyChunkContainer()
+void LVLExplorerFrame::DestroyLibContainer()
 {
 	if (m_currentContainer == nullptr)
 		return;
 
-	LVL* lvl = dynamic_cast<LVL*>(m_currentContainer);
-	if (lvl != nullptr)
-	{
-		LVL::Destroy(lvl);
-		m_currentContainer = nullptr;
-		return;
-	}
-
-	BNK* soundBank = dynamic_cast<BNK*>(m_currentContainer);
-	if (soundBank != nullptr)
-	{
-		BNK::Destroy(soundBank);
-		m_currentContainer = nullptr;
-		return;
-	}
-
-	wxMessageBox(
-		"Unkown Chunk Container Type!",
-		"Error",
-		wxICON_ERROR);
+	Container::Delete(m_currentContainer);
+	m_currentContainer = nullptr;
 }
 
 void LVLExplorerFrame::DisplayText()
@@ -214,8 +201,9 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 
 	if (m_currentContainer != nullptr)
 	{
-		DestroyChunkContainer();
+		DestroyLibContainer();
 	}
+	m_currentContainer = Container::Create();
 
 	wxString path = dialog.GetPath();
 	wxFileName fileName(path);
@@ -223,11 +211,11 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 
 	if (fileExt == "lvl" || fileExt == "zafbin" || fileExt == "zaabin" || fileExt == "script")
 	{
-		m_currentContainer = LVL::Create();
+		m_currentContainer->AddLevel(path.c_str().AsChar());
 	}
 	else if (fileExt == "bnk")
 	{
-		m_currentContainer = BNK::Create();
+		m_currentContainer->AddSoundBank(path.c_str().AsChar());
 	}
 	else
 	{
@@ -238,27 +226,11 @@ void LVLExplorerFrame::OnMenuOpenFile(wxCommandEvent& event)
 		return;
 	}
 
-	if (!m_currentContainer->ReadFromFile(path.c_str().AsChar()))
-	{
-		wxMessageBox(
-			wxString::Format("Errors occoured while opening file '%s'!", path),
-			"Error",
-			wxICON_ERROR);
-
-		//LVL::Destroy(m_currentContainer);
-		//m_currentContainer = nullptr;
-		//return;
-	}
-
-	m_treeRoot = m_lvlTreeCtrl->AddRoot(dialog.GetFilename().c_str().AsChar());
-	if (m_currentContainer != nullptr)
-	{
-		ParseChunk(m_currentContainer, m_treeRoot);
-		
-		//wxFile file("chunks.txt", wxFile::write);
-		//file.Write(m_chunkNames);
-		//file.Close();
-	}
+	wxASSERT(m_progress == nullptr);
+	m_progress = new wxProgressDialog("Loading", "Loading....");
+	m_progress->Show();
+	
+	m_currentContainer->StartLoading();
 }
 
 void LVLExplorerFrame::OnMenuExit(wxCommandEvent& event)
@@ -286,7 +258,7 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 		return;
 	}
 
-	GenericBaseChunk* chunk = it->second;
+	const GenericBaseChunk* chunk = it->second;
 	m_infoText->SetLabel(wxString::Format(
 		"Chunk Position:\t%i\n"
 		"Chunk Data Size:\t%i\n"
@@ -296,10 +268,10 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 		(uint32_t)chunk->GetFullSize()
 	));
 
-	BODY* textureBodyChunk = dynamic_cast<BODY*>(chunk);
+	const BODY* textureBodyChunk = dynamic_cast<const BODY*>(chunk);
 
 	// Display first mip map texture of first found format if a tex_ chunk is selected
-	tex_* textureChunk = dynamic_cast<tex_*>(chunk);
+	const tex_* textureChunk = dynamic_cast<const tex_*>(chunk);
 	if (textureChunk != nullptr && textureChunk->m_FMTs.Size() > 0 && textureChunk->m_FMTs[0]->p_Face->m_LVLs.Size() > 0)
 	{
 		textureBodyChunk = textureChunk->m_FMTs[0]->p_Face->m_LVLs[0]->p_Body;
@@ -375,7 +347,7 @@ bool LVLExplorerFrame::SearchTree(wxTreeItemId parent, const wxString& search)
 	auto it = m_treeToChunk.find(parent);
 	if (it != m_treeToChunk.end())
 	{
-		GenericBaseChunk* chunk = it->second;
+		const GenericBaseChunk* chunk = it->second;
 		try
 		{
 			// sometimes, someone (not LibSWBF2) throws a "string too long" exception (msvcp140d.dll??)
@@ -428,7 +400,7 @@ void LVLExplorerFrame::OnSearch(wxCommandEvent& event)
 	SearchTree(m_treeRoot, search);
 }
 
-void LVLExplorerFrame::ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent, size_t childIndex)
+void LVLExplorerFrame::ParseChunk(const GenericBaseChunk* chunk, wxTreeItemId parent, size_t childIndex)
 {
 	wxTreeItemId current = m_lvlTreeCtrl->AppendItem(parent, wxString::Format("[%i] %s", (int)childIndex, chunk->GetHeaderName().Buffer()));
 	m_lvlTreeCtrl->SetItemBackgroundColour(current, ITEM_COLOR_BACKGROUND);
@@ -441,6 +413,46 @@ void LVLExplorerFrame::ParseChunk(GenericBaseChunk* chunk, wxTreeItemId parent, 
 	for (size_t i = 0; i < children.Size(); ++i)
 	{
 		ParseChunk(children[i], current, i);
+	}
+}
+
+void LVLExplorerFrame::OnIdle(wxIdleEvent& event)
+{
+	LoggerEntry log;
+	while (Logger::GetNextLog(log))
+	{
+		AddLogLine(log.ToString().Buffer());
+	}
+
+	if (m_currentContainer != nullptr && m_progress != nullptr)
+	{
+		if (!m_currentContainer->IsDone())
+		{
+			int percent = int(m_currentContainer->GetOverallProgress() * 100.0f);
+			wxString dspStr = wxString::Format("Loading... %d %%", percent);
+			m_progress->Update(percent, dspStr);
+		}
+		else
+		{
+			List<SWBF2Handle> handles = m_currentContainer->GetLoadedLevels();
+			Level* level = m_currentContainer->GetLevel(handles[0]);
+
+			m_lvlTreeCtrl->Freeze();
+			//m_treeRoot = m_lvlTreeCtrl->AddRoot(level->GetLevelName().Buffer());
+			m_treeRoot = m_lvlTreeCtrl->AddRoot("root");
+			m_lvlTreeCtrl->Thaw();
+
+			m_progress->Update(100, "Parsing...");
+			ParseChunk(level->GetChunk(), m_treeRoot);
+
+			m_lvlTreeCtrl->Expand(m_treeRoot);
+
+			//m_progress->Hide();
+			delete m_progress;
+			m_progress = nullptr;
+
+			m_lvlTreeCtrl->SetFocus();
+		}
 	}
 }
 
