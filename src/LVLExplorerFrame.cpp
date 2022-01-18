@@ -296,10 +296,14 @@ void LVLExplorerFrame::OnTreeSelectionChanges(wxTreeEvent& event)
 		m_imageData = (uint8_t*)malloc(numPixels * 3);
 		for (size_t i = 0; i < numPixels; ++i)
 		{
-			//let's get rid of the alpha channel
-			m_imageData[(i * 3) + 0] = data[(i * 4) + 0];
-			m_imageData[(i * 3) + 1] = data[(i * 4) + 1];
-			m_imageData[(i * 3) + 2] = data[(i * 4) + 2];
+			// calc alpha
+			const uint8_t alphaColor[3] = { 255, 0, 255 };
+			float alpha = data[(i * 4) + 3] / 255.f;
+			float transparency = 1.f - alpha;
+
+			m_imageData[(i * 3) + 0] = uint8_t(data[(i * 4) + 0] * alpha + alphaColor[0] * transparency);
+			m_imageData[(i * 3) + 1] = uint8_t(data[(i * 4) + 1] * alpha + alphaColor[1] * transparency);
+			m_imageData[(i * 3) + 2] = uint8_t(data[(i * 4) + 2] * alpha + alphaColor[2] * transparency);
 		}
 
 		m_imageDisplay->SetImageData(m_imageWidth, m_imageHeight, m_imageData);
