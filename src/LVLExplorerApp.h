@@ -15,6 +15,8 @@ public:
 	virtual bool OnInit();
 };
 
+wxDECLARE_APP(LVLExplorerApp);
+
 /* ---- CREDITS ----
  * APPLICATION ICON: adrenochromedream, http://www.rw-designer.com/user/adrenochromedream
  */

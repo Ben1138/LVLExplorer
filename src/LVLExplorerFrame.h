@@ -4,6 +4,10 @@
 #include <wx/treectrl.h>
 #include <wx/menu.h>
 #include <wx/progdlg.h>
+#include <wx/textctrl.h>
+#include <wx/treectrl.h>
+#include <wx/stattext.h>
+#include <wx/progdlg.h>
 #include "wxImagePanel.h"
 #include "LibSWBF2.h"
 #include "Chunks/LVL/tex_/tex_.h"
